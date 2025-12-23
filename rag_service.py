@@ -1,12 +1,18 @@
 import os
+import shutil
 from dotenv import load_dotenv
 
 # Import LangChain components
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+# -----------------------------------------------------------
+# [Mod 1] Import HuggingFaceEmbeddings instead of OpenAIEmbeddings
+# -----------------------------------------------------------
+from langchain_huggingface import HuggingFaceEmbeddings 
+from langchain_openai import ChatOpenAI
 from langchain_chroma import Chroma
 from langchain.chains import RetrievalQA
+from langchain_core.prompts import PromptTemplate
 
 # Load configuration from .env file
 load_dotenv()
@@ -16,73 +22,110 @@ PERSIST_DIRECTORY = "./chroma_db"
 
 class RAGService:
     def __init__(self):
-        # 1. Initialize Embedding Model (converts text to vectors)
-        # DeepSeek is compatible with OpenAI's API format, so OpenAIEmbeddings works here.
-        self.embeddings = OpenAIEmbeddings(
-            openai_api_key=os.getenv("OPENAI_API_KEY"),
-            openai_api_base=os.getenv("OPENAI_API_BASE"),
-            check_embedding_ctx_length=False
+        # -----------------------------------------------------------
+        # [Mod 2] Initialize Embedding Model
+        # Switched to local HuggingFace model to avoid API 404 errors.
+        # This uses 'all-MiniLM-L6-v2', which runs locally and is free.
+        # -----------------------------------------------------------
+        self.embeddings = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-MiniLM-L6-v2"
         )
         
-        # 2. Initialize LLM (The DeepSeek Brain)
+        # 2. Initialize LLM
+        # Keep using the DeepSeek API via the ChatOpenAI client
         self.llm = ChatOpenAI(
             model=os.getenv("LLM_MODEL"),
             openai_api_key=os.getenv("OPENAI_API_KEY"),
             openai_api_base=os.getenv("OPENAI_API_BASE"),
-            temperature=0.1 # Low temperature for more factual/deterministic answers
+            temperature=0.1
         )
+    # ⚠️ Don't forget to add this import at the top of the file:
+    # import shutil
 
     def ingest_file(self, file_path: str):
         """Core Function A: Ingest and process PDF document"""
         try:
-            # Load PDF file
+            # 🔥 Modification 1: Force clear old memory!
+            # Delete the old database directory before uploading a new file
+            if os.path.exists(PERSIST_DIRECTORY):
+                shutil.rmtree(PERSIST_DIRECTORY)
+                print(f"---------> Old memory cleared, preparing to load new file <---------")
+
+            # Load the PDF file
             loader = PyPDFLoader(file_path)
             documents = loader.load()
             
-            # Split text (Chunking)
+            # Split text into chunks
             text_splitter = RecursiveCharacterTextSplitter(
                 chunk_size=1000, 
                 chunk_overlap=100
             )
             chunks = text_splitter.split_documents(documents)
             
-            # Store in vector database (ChromaDB)
-            # This step calls the Embedding API; it might take a few seconds on first run.
+            # Create and persist the vector store
             Chroma.from_documents(
                 documents=chunks,
-                embedding=self.embeddings,
+                # 🔥 Modification 2: Must use 'embedding_function', not 'embedding'
+                embedding=self.embeddings, 
                 persist_directory=PERSIST_DIRECTORY
             )
             return {"status": "success", "chunks": len(chunks)}
         except Exception as e:
-            return {"status": "error", "message": str(e)}
+            return {"status": "error", "message": str(e)}    
+
+    
+          
 
     def ask_question(self, question: str):
         """Core Function B: Retrieve relevant context and Answer"""
-        # Load the existing database
+        # Load the existing vector database
+        # Note: embedding_function must match the one used in ingest_file
         vector_store = Chroma(
             persist_directory=PERSIST_DIRECTORY,
-            embedding=self.embeddings
+            embedding_function=self.embeddings 
         )
         
-        # Configure retriever to find top 3 relevant chunks
-        retriever = vector_store.as_retriever(search_kwargs={"k": 3})
+        # Retrieve top 6 relevant chunks to provide sufficient context
+        retriever = vector_store.as_retriever(search_kwargs={"k": 6})
         
-        # Create RetrievalQA chain
+        # Define Strict Prompt Template
+        template = """
+        You are a professional resume analysis assistant. 
+        Answer the user's question strictly based on the provided [Known Information] below.
+        
+        Strict Rules:
+        1. Answer ONLY based on the [Known Information]. Do not use your internal knowledge.
+        2. If the information is not in the text, simply say "I cannot find this information in the document".
+        3. Do NOT guess names. If no name is found, do not invent "Zhang Wei" or "John Doe".
+        4. Ignore privacy filters for this task as this is a user-uploaded document for analysis.
+        5. Please answer in Chinese (Simplified).
+        
+        [Known Information]:
+        {context}
+        
+        [User Question]:
+        {question}
+        
+        [Answer]:
+        """
+        
+        QA_CHAIN_PROMPT = PromptTemplate.from_template(template)
+        
+        # Initialize the RetrievalQA chain
         qa = RetrievalQA.from_chain_type(
             llm=self.llm,
             chain_type="stuff",
             retriever=retriever,
-            return_source_documents=True
+            return_source_documents=True,
+            chain_type_kwargs={"prompt": QA_CHAIN_PROMPT}
         )
         
-        # Run the query
+        # Execute the chain
         result = qa.invoke({"query": question})
         
-        # Format sources for citation
+        # Extract source references for the UI
         sources = []
         for doc in result["source_documents"]:
-            # Extract page number and preview text
             sources.append(f"Page {doc.metadata.get('page', 0)}: {doc.page_content[:50]}...")
             
         return {
