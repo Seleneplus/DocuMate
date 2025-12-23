@@ -3,7 +3,7 @@ import shutil
 from dotenv import load_dotenv
 
 # Import LangChain components
-from langchain_community.document_loaders import PyPDFLoader
+
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 # -----------------------------------------------------------
 # [Mod 1] Import HuggingFaceEmbeddings instead of OpenAIEmbeddings
@@ -13,6 +13,7 @@ from langchain_openai import ChatOpenAI
 from langchain_chroma import Chroma
 from langchain.chains import RetrievalQA
 from langchain_core.prompts import PromptTemplate
+from langchain_community.document_loaders import PyMuPDFLoader
 
 # Load configuration from .env file
 load_dotenv()
@@ -52,7 +53,7 @@ class RAGService:
                 print(f"---------> Old memory cleared, preparing to load new file <---------")
 
             # Load the PDF file
-            loader = PyPDFLoader(file_path)
+            loader = PyMuPDFLoader(file_path)
             documents = loader.load()
             
             # Split text into chunks
@@ -71,15 +72,11 @@ class RAGService:
             )
             return {"status": "success", "chunks": len(chunks)}
         except Exception as e:
-            return {"status": "error", "message": str(e)}    
-
-    
-          
-
+            return {"status": "error", "message": str(e)}  
     def ask_question(self, question: str):
         """Core Function B: Retrieve relevant context and Answer"""
         # Load the existing vector database
-        # Note: embedding_function must match the one used in ingest_file
+        # Note: 'embedding_function' must match the one used in ingest_file
         vector_store = Chroma(
             persist_directory=PERSIST_DIRECTORY,
             embedding_function=self.embeddings 
@@ -123,12 +120,37 @@ class RAGService:
         # Execute the chain
         result = qa.invoke({"query": question})
         
-        # Extract source references for the UI
+        
+        
+        # 1. Detection: Check if any retrieved chunks come from page 2 or later (index > 0)
+        # If all chunks have page index 0, it implies a single-page document, so we hide page numbers for a cleaner UI.
+        has_multiple_pages = any(doc.metadata.get('page', 0) > 0 for doc in result["source_documents"])
+
         sources = []
         for doc in result["source_documents"]:
-            sources.append(f"Page {doc.metadata.get('page', 0)}: {doc.page_content[:50]}...")
+            # 2. Cleaning: Replace newlines with spaces to prevent sentence breakage and trim whitespace.
+            clean_content = doc.page_content.replace("\n", " ").strip()
+            
+            # 3. Truncation: Increase limit to 250 chars to include full sentences.
+            # Add quotes and ellipses to make it look like a formal citation.
+            content_preview = f"“...{clean_content[:250]}...”"
+            
+            if has_multiple_pages:
+                # Mode A (Multi-page): Display "Page X: Context..." to help users locate info.
+                page_num = doc.metadata.get('page', 0) + 1
+                source_text = f"Page {page_num}: {content_preview}"
+            else:
+                # Mode B (Single-page): Only display "Context..." (Cleaner look).
+                source_text = content_preview
+            
+            sources.append(source_text)
             
         return {
             "answer": result["result"],
             "sources": sources
-        }
+        }  
+
+    
+          
+
+    
