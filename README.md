@@ -37,7 +37,36 @@ Configured `HF_ENDPOINT` mirroring to ensure stable model downloads and 100% ser
 
 ---
 
-## 🚀 Getting Started
+
+## 🚀 Usage
+
+### Option A: Online Demo (Recommended)
+[Click here to access the Live Demo](your-website-link)
+
+### Option B: Local Development
+If you wish to study the source code or run the application in a local environment, please follow these steps:
+
+1.  **Clone the Repository**:
+    ```bash
+    git clone [https://github.com/Seleneplus/DocuMate.git](https://github.com/Seleneplus/DocuMate.git)
+    cd DocuMate
+    ```
+2.  **Install Dependencies**:
+    Ensure you have Python installed, then run:
+    ```bash
+    pip install -r requirements.txt
+    ```
+3.  **Configure Environment Variables**:
+    Create a `.env` file in the root directory and add your DeepSeek API credentials:
+    ```env
+    OPENAI_API_KEY=your_deepseek_api_key
+    OPENAI_API_BASE=[https://api.deepseek.com/v1](https://api.deepseek.com/v1)
+    LLM_MODEL=deepseek-chat
+    ```
+4.  **Run the Application**:
+    ```bash
+    streamlit run app.py
+    ```
 
 1.  **Clone the Repo**: `git clone https://github.com/Seleneplus/DocuMate.git`
 2.  **Install Dependencies**: `pip install -r requirements.txt`
