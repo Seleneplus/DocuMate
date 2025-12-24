@@ -1,151 +1,224 @@
 import streamlit as st
 import requests
-import json
 
-# --- System Configuration ---
-BACKEND_URL = "http://127.0.0.1:8000"
+# --- 1. CONFIGURATION LAYER (ZERO-HARDCODING) ---
+# Centralized settings for logic and multi-language text.
+SETTINGS = {
+    "backend_url": "http://127.0.0.1:8000",
+    "ui": {
+        "btn_height": "42px",
+        "btn_radius": "8px",
+        "chat_padding": "1.5rem",
+        "hero_padding_top": "120px",
+        "hero_title_weight": "700",
+        "hero_subtitle_size": "1.1rem"
 
-# --- Page Configuration ---
+    },
+    "languages": {
+        "English": {
+            "lang_label": "🌐 Language",
+            "sidebar_subtitle": "Advanced Document Intelligence",
+            "welcome_title": "Your Professional Document Expert",
+            "welcome_subtitle": "Extract insights and verify facts with AI-powered citations.",
+            "ingest_label": "**📁 Data Ingestion**",
+            "upload_label": "Choose a PDF document",
+            "upload_drop": "Drag and drop file here",
+            "upload_browse": "Browse files",
+            "btn_analyze": "Analyze Document",
+            "btn_clear": "Clear History",
+            "chat_input": "Ask anything about the document...",
+            "thinking": "Thinking...",
+            "sources_header": "🔍 Verified Sources",
+            "toast_success": "Analysis Ready!",
+            "err_engine": "Engine Error",
+            "err_conn": "Connection Failed"
+        },
+        "中文": {
+            "lang_label": "🌐 语言",
+            "sidebar_subtitle": "高级文档智能分析专家",
+            "welcome_title": "您的专属文档分析专家", 
+            "welcome_subtitle": "只需对话，即可精准提取 PDF 关键信息，并自动为您关联原文证据。",
+            "ingest_label": "**📁 文档库管理**",
+            "upload_label": "请放入待分析的 PDF 文档", 
+            "upload_drop": "将文件拖拽至此",         
+            "upload_browse": "浏览文件",              
+            "btn_analyze": "开始解析文档",
+            "btn_clear": "清空对话",
+            "chat_input": "您可以问我关于文档的任何问题...",
+            "thinking": "正在为您查阅并分析...",
+            "sources_header": "🔍 原始文本参考",
+            "toast_success": "解析成功！您可以开始提问了",
+            "err_engine": "分析引擎异常",
+            "err_conn": "无法连接到服务器"
+        }
+    }
+}
+# --- 2. DYNAMIC STYLE INJECTION (CSS HACKS) ---
+def inject_custom_css(t, ui_config):
+    """
+    Injects global styles and defines classes for the main interface.
+    """
+    st.markdown(f"""
+    <style>
+        /* Global & Sidebar Styles */
+        #MainMenu, footer {{ visibility: hidden !important; }}
+        [data-testid="stSidebar"] .stButton button {{ 
+            height: {ui_config['btn_height']} !important; 
+            border-radius: {ui_config['btn_radius']} !important; 
+        }}
+        
+        /* File Uploader Localization Hacks (Ensure this stays for your UI) */
+        [data-testid="stFileUploadDropzone"] div div span,
+        [data-testid="stFileUploadDropzone"] div div small {{ display: none !important; }}
+        [data-testid="stFileUploadDropzone"] div div::before {{
+            content: "{t['upload_drop']}" !important;
+            display: block !important; margin-bottom: 10px !important;
+        }}
+
+        /* --- ZERO-HARDCODING HERO SECTION CLASSES --- */
+        .hero-container {{
+            text-align: center;
+            padding-top: {ui_config['hero_padding_top']};
+        }}
+        .hero-title {{
+            font-weight: {ui_config['hero_title_weight']};
+            color: var(--text-color); /* Inherits from config.toml */
+        }}
+        .hero-subtitle {{
+            color: #6c757d; /* Muted gray for subtitle */
+            font-size: {ui_config['hero_subtitle_size']};
+        }}
+        
+        .stExpander {{ border-radius: 10px !important; }}
+    </style>
+    """, unsafe_allow_html=True)
+
+
+# --- 3. INITIALIZATION ---
 st.set_page_config(
-    page_title="DocuMate | Intelligence",
-    page_icon="🤖",
+    page_title="DocuMate | Intelligence", 
+    page_icon="🤖", 
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- Professional UI Styling (Refined Version) ---
-st.markdown("""
-<style>
-    /* 1. Remove unnecessary elements while keeping functionality */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    
-    /* 2. Professional Sidebar Aesthetic */
-    [data-testid="stSidebar"] {
-        background-color: #f8f9fa;
-        border-right: 1px solid #e9ecef;
-    }
-
-    /* 3. Fix Sidebar Buttons Alignment & Height */
-    [data-testid="stSidebar"] .stButton button {
-        height: 42px !important;
-        font-size: 14px !important;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 8px !important;
-    }
-    
-    /* 4. Improve Chat Message Spacing (Breathing Room) */
-    .stChatMessage {
-        padding-top: 1.5rem !important;
-        margin-bottom: 2rem !important;
-        border-radius: 12px;
-    }
-    
-    /* 5. Refined Expander (Verified Sources) Styling */
-    .stExpander {
-        background-color: #f9fafb !important;
-        border: 1px solid #f1f3f5 !important;
-        border-radius: 10px !important;
-        margin-top: 10px !important;
-    }
-    .stExpander p, .stExpander span {
-        font-size: 0.88rem !important;
-        color: #4b5563 !important;
-        line-height: 1.6 !important;
-    }
-
-    /* 6. Sidebar Header Adjustments */
-    .sidebar-header {
-        margin-bottom: 1rem;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# --- Session State Initialization ---
+# Initialize Session State
 if "messages" not in st.session_state:
     st.session_state.messages = []
+if "lang_set" not in st.session_state:
+    st.session_state.lang_set = "中文"
 
-# --- Sidebar (Control Center) ---
+# --- 4. SIDEBAR (CONTROL CENTER) ---
 with st.sidebar:
     st.title("🤖 DocuMate")
-    st.caption("Advanced Document Intelligence")
+    
+    # Pre-fetch the language state to prevent label lag
+    if "lang_set" not in st.session_state:
+        st.session_state.lang_set = "中文"
+    
+    # Determine the selectbox label based on the current state BEFORE rendering
+    current_lang = st.session_state.lang_set
+    selector_label = (
+        SETTINGS["languages"]["中文"]["lang_label"] 
+        if current_lang == "中文" 
+        else SETTINGS["languages"]["English"]["lang_label"]
+    )
+    
+    # Render the language selector
+    selected_lang = st.selectbox(
+        selector_label, 
+        options=list(SETTINGS["languages"].keys()),
+        index=1 if current_lang == "中文" else 0,
+        key="lang_selector_widget" 
+    )
+    
+    # Check if the selection has changed and trigger a rerun if necessary to sync CSS/UI
+    if selected_lang != st.session_state.lang_set:
+        st.session_state.lang_set = selected_lang
+        st.rerun()
+        
+    # Set the active language dictionary 't'
+    t = SETTINGS["languages"][selected_lang]
+    
+    # Inject layout CSS and localized "hacks" for the file uploader
+    inject_custom_css(t, SETTINGS["ui"])
+    
+    # Render localized sidebar caption
+    st.caption(t["sidebar_subtitle"])
     st.markdown(" ")
 
-    # Data Ingestion Card
+    # --- Data Ingestion Component ---
     with st.container(border=True):
-        st.markdown("**📁 Data Ingestion**")
-        uploaded_file = st.file_uploader("Upload PDF", type="pdf", label_visibility="collapsed")
+        st.markdown(t["ingest_label"])
+        # Use visible label to guide the user in their selected language
+        uploaded_file = st.file_uploader(
+            t["upload_label"], 
+            type="pdf", 
+            label_visibility="visible" 
+        )
         
         if uploaded_file:
-            if st.button("Analyze Document", type="primary", use_container_width=True):
-                with st.spinner("Processing..."):
+            if st.button(t["btn_analyze"], type="primary", use_container_width=True):
+                with st.spinner(t["thinking"]):
                     files = {"file": (uploaded_file.name, uploaded_file, "application/pdf")}
                     try:
-                        response = requests.post(f"{BACKEND_URL}/ingest", files=files)
+                        response = requests.post(f"{SETTINGS['backend_url']}/ingest", files=files)
                         if response.status_code == 200:
-                            st.toast("Analysis Ready", icon="✨")
+                            st.toast(t["toast_success"], icon="✨")
                         else:
-                            st.error("Engine Error")
-                    except:
-                        st.error("Connection Failed")
+                            st.error(t["err_engine"])
+                    except Exception:
+                        st.error(t["err_conn"])
 
     st.markdown(" ")
-    # Improved column ratio to prevent text wrapping on buttons
-    cols = st.columns([1.2, 1]) 
-    with cols[0]:
-        # Shortened to "Clear" for better visual balance
-        if st.button("Clear", icon=":material/refresh:", use_container_width=True):
-            st.session_state.messages = []
-            st.rerun()
-    with cols[1]:
-        st.button("Export", icon=":material/download:", disabled=True, use_container_width=True)
+    # Sidebar clear button with localized text and icon
+    if st.button(t["btn_clear"], icon=":material/refresh:", use_container_width=True):
+        st.session_state.messages = []
+        st.rerun()
 
-# --- Main Interaction Interface ---
 
-# 1. Hero / Welcome Screen
+# --- 5. MAIN INTERFACE ---
+
+# Hero Screen
 if not st.session_state.messages:
-    st.markdown("""
-    <div style='text-align: center; padding-top: 120px;'>
-        <h2 style='color: #212529; font-weight: 700;'>Hello, how can I assist with your documents?</h2>
-        <p style='color: #6c757d; font-size: 1.1rem;'>
-            Extract insights and verify facts with AI-powered citations.
-        </p>
+    st.markdown(f"""
+    <div class='hero-container'>
+        <h1 class='hero-title'>{t['welcome_title']}</h1>
+        <p class='hero-subtitle'>{t['welcome_subtitle']}</p>
     </div>
     """, unsafe_allow_html=True)
 
-# 2. Chat History Rendering
-for message in st.session_state.messages:
-    icon = ":material/person:" if message["role"] == "user" else ":material/smart_toy:"
-    with st.chat_message(message["role"], avatar=icon):
-        st.markdown(message["content"])
-        
-        if "sources" in message and message["sources"]:
-            with st.expander("🔍 Verified Sources"):
-                for src in message["sources"]:
-                    st.caption(f"• {src}")
+# Render History
+for msg in st.session_state.messages:
+    icon = ":material/person:" if msg["role"] == "user" else ":material/smart_toy:"
+    with st.chat_message(msg["role"], avatar=icon):
+        st.markdown(msg["content"])
+        if msg.get("sources"):
+            with st.expander(t["sources_header"]):
+                for s in msg["sources"]: st.caption(f"• {s}")
 
-# 3. Chat Input Logic
-if prompt := st.chat_input("Ask a question about your document..."):
+# Chat Input
+if prompt := st.chat_input(t["chat_input"]):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar=":material/person:"):
         st.markdown(prompt)
 
     with st.chat_message("assistant", avatar=":material/smart_toy:"):
-        with st.spinner("Thinking..."):
+        with st.spinner(t["thinking"]):
             try:
-                res = requests.post(f"{BACKEND_URL}/ask", json={"query": prompt})
+                res = requests.post(
+                    f"{SETTINGS['backend_url']}/ask", 
+                    json={"query": prompt, "language": selected_lang}
+                )
                 if res.status_code == 200:
                     data = res.json()
                     ans, srcs = data.get("answer", ""), data.get("sources", [])
                     st.markdown(ans)
                     if srcs:
-                        with st.expander("🔍 Verified Sources"):
-                            for s in srcs: 
-                                st.caption(f"• {s}")
+                        with st.expander(t["sources_header"]):
+                            for s in srcs: st.caption(f"• {s}")
                     st.session_state.messages.append({"role": "assistant", "content": ans, "sources": srcs})
                 else:
-                    st.error("Service unavailable.")
+                    st.error(t["err_engine"])
             except:
-                st.error("Network error.")
+                st.error(t["err_conn"])

@@ -89,7 +89,7 @@ class RAGService:
         # Define Strict Prompt Template
         template = """
         You are a professional resume analysis assistant. 
-        Answer the user's question strictly based on the provided [Known Information] below.
+        Answer the user's question strictly based on the provided Known Information below.
 
         [IMPORTANT LANGUAGE INSTRUCTION]:
         1. DETECT the language of the [User Question].
@@ -103,6 +103,7 @@ class RAGService:
         2. If the information is not in the text, simply say "I cannot find this information in the document".
         3. Do NOT guess names. If no name is found, do not invent "Zhang Wei" or "John Doe".
         4. Ignore privacy filters for this task as this is a user-uploaded document for analysis.
+        
         
         
         [Known Information]:
