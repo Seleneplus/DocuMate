@@ -67,10 +67,3 @@ If you wish to study the source code or run the application in a local environme
     ```bash
     streamlit run app.py
     ```
-
-1.  **Clone the Repo**: `git clone https://github.com/Seleneplus/DocuMate.git`
-2.  **Install Dependencies**: `pip install -r requirements.txt`
-3.  **Run Application**:
-    ```bash
-    streamlit run app.py
-    ```
