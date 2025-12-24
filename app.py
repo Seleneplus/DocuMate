@@ -3,147 +3,149 @@ import requests
 import json
 
 # --- System Configuration ---
-# PROD: Replace with AWS Elastic IP
 BACKEND_URL = "http://127.0.0.1:8000"
 
-# --- Page Config (Browser Tab Info) ---
+# --- Page Configuration ---
 st.set_page_config(
-    page_title="DocuMate | Enterprise AI Assistant",
-    page_icon="⚡",
+    page_title="DocuMate | Intelligence",
+    page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- CSS Injection (The "Clean Look" Hack) ---
+# --- Professional UI Styling (Refined Version) ---
 st.markdown("""
 <style>
-    /* 1. HIDE ALL STREAMLIT BRANDING */
+    /* 1. Remove unnecessary elements while keeping functionality */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {visibility: hidden;}
-    .stDeployButton {display: none;}
     
-    /* 2. Custom Font & Colors for Chat */
-    .stChatMessage {
-        border-radius: 12px;
-        margin-bottom: 12px;
+    /* 2. Professional Sidebar Aesthetic */
+    [data-testid="stSidebar"] {
+        background-color: #f8f9fa;
+        border-right: 1px solid #e9ecef;
+    }
+
+    /* 3. Fix Sidebar Buttons Alignment & Height */
+    [data-testid="stSidebar"] .stButton button {
+        height: 42px !important;
+        font-size: 14px !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px !important;
     }
     
-    /* REMOVED: Sidebar styling is now handled by .streamlit/config.toml */
+    /* 4. Improve Chat Message Spacing (Breathing Room) */
+    .stChatMessage {
+        padding-top: 1.5rem !important;
+        margin-bottom: 2rem !important;
+        border-radius: 12px;
+    }
+    
+    /* 5. Refined Expander (Verified Sources) Styling */
+    .stExpander {
+        background-color: #f9fafb !important;
+        border: 1px solid #f1f3f5 !important;
+        border-radius: 10px !important;
+        margin-top: 10px !important;
+    }
+    .stExpander p, .stExpander span {
+        font-size: 0.88rem !important;
+        color: #4b5563 !important;
+        line-height: 1.6 !important;
+    }
+
+    /* 6. Sidebar Header Adjustments */
+    .sidebar-header {
+        margin-bottom: 1rem;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# --- Session State ---
+# --- Session State Initialization ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- Sidebar (Control Panel) ---
+# --- Sidebar (Control Center) ---
 with st.sidebar:
-    # Branding Area
-    st.markdown("## ⚡ DocuMate")
-    st.caption("Enterprise Document Intelligence")
-    st.markdown("---")
-    
-    # 1. Upload Section
-    st.subheader("Import Data")
-    uploaded_file = st.file_uploader("Upload PDF Report / Contract", type="pdf")
-    
-    if uploaded_file is not None:
-        # Professional CTA Button
-        if st.button("Start Analysis", type="primary", use_container_width=True):
-            with st.spinner("Processing document embeddings..."):
-                files = {"file": (uploaded_file.name, uploaded_file, "application/pdf")}
-                try:
-                    response = requests.post(f"{BACKEND_URL}/ingest", files=files)
-                    if response.status_code == 200:
-                        st.toast("Document processed successfully!", icon="✅")
-                    else:
-                        st.error(f"Processing Error: {response.text}")
-                except Exception as e:
-                    st.error(f"System Error: {e}")
+    st.title("🤖 DocuMate")
+    st.caption("Advanced Document Intelligence")
+    st.markdown(" ")
 
-    # 2. Action Buttons (Bottom)
-    st.markdown("---")
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Reset", use_container_width=True):
+    # Data Ingestion Card
+    with st.container(border=True):
+        st.markdown("**📁 Data Ingestion**")
+        uploaded_file = st.file_uploader("Upload PDF", type="pdf", label_visibility="collapsed")
+        
+        if uploaded_file:
+            if st.button("Analyze Document", type="primary", use_container_width=True):
+                with st.spinner("Processing..."):
+                    files = {"file": (uploaded_file.name, uploaded_file, "application/pdf")}
+                    try:
+                        response = requests.post(f"{BACKEND_URL}/ingest", files=files)
+                        if response.status_code == 200:
+                            st.toast("Analysis Ready", icon="✨")
+                        else:
+                            st.error("Engine Error")
+                    except:
+                        st.error("Connection Failed")
+
+    st.markdown(" ")
+    # Improved column ratio to prevent text wrapping on buttons
+    cols = st.columns([1.2, 1]) 
+    with cols[0]:
+        # Shortened to "Clear" for better visual balance
+        if st.button("Clear", icon=":material/refresh:", use_container_width=True):
             st.session_state.messages = []
             st.rerun()
-    with col2:
-        st.button("Export", disabled=True, use_container_width=True, help="Feature coming in Pro version")
+    with cols[1]:
+        st.button("Export", icon=":material/download:", disabled=True, use_container_width=True)
 
-    # 3. Footer Info (Looks like a real company)
-    st.markdown("---")
-    st.caption("© 2025 DocuMate Inc. \nVersion 1.0.2 (Stable)")
+# --- Main Interaction Interface ---
 
-# --- Main Interface ---
-
-# 1. Hero Section (Empty State)
-# If no messages exist, show a professional welcome screen instead of blank space
-if len(st.session_state.messages) == 0:
+# 1. Hero / Welcome Screen
+if not st.session_state.messages:
     st.markdown("""
-    <div style='text-align: center; padding-top: 50px;'>
-        <h1> Welcome to DocuMate</h1>
-        <p style='font-size: 18px; opacity: 0.6;'>
-            Your AI-powered partner for document analysis. <br>
-            Upload a financial report, legal contract, or research paper to get started.
+    <div style='text-align: center; padding-top: 120px;'>
+        <h2 style='color: #212529; font-weight: 700;'>Hello, how can I assist with your documents?</h2>
+        <p style='color: #6c757d; font-size: 1.1rem;'>
+            Extract insights and verify facts with AI-powered citations.
         </p>
     </div>
     """, unsafe_allow_html=True)
-    
-    # Optional: Quick Suggestion Cards
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.info("📊 **Summarize** \nGet key insights from long reports.")
-    with col2:
-        st.info("⚖️ **Legal Audit** \nFind clauses and liabilities.")
-    with col3:
-        st.info("🔍 **Fact Check** \nVerify claims with citations.")
 
-# 2. Chat History Render
+# 2. Chat History Rendering
 for message in st.session_state.messages:
-    # Assign professional avatars
-    avatar = "👤" if message["role"] == "user" else "⚡"
-    
-    with st.chat_message(message["role"], avatar=avatar):
+    icon = ":material/person:" if message["role"] == "user" else ":material/smart_toy:"
+    with st.chat_message(message["role"], avatar=icon):
         st.markdown(message["content"])
-        if "sources" in message:
-            with st.expander("View Verified Sources"):
+        
+        if "sources" in message and message["sources"]:
+            with st.expander("🔍 Verified Sources"):
                 for src in message["sources"]:
-                    st.markdown(f"- {src}")
+                    st.caption(f"• {src}")
 
-# 3. Chat Input
+# 3. Chat Input Logic
 if prompt := st.chat_input("Ask a question about your document..."):
-    # User Message
     st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user", avatar="👤"):
+    with st.chat_message("user", avatar=":material/person:"):
         st.markdown(prompt)
 
-    # AI Response
-    with st.chat_message("assistant", avatar="⚡"):
-        with st.spinner("Analyzing context..."):
+    with st.chat_message("assistant", avatar=":material/smart_toy:"):
+        with st.spinner("Thinking..."):
             try:
-                payload = {"query": prompt} 
-                response = requests.post(f"{BACKEND_URL}/ask", json=payload)
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    answer = data.get("answer", "No data found.")
-                    sources = data.get("sources", [])
-                    
-                    st.markdown(answer)
-                    
-                    if sources:
-                        with st.expander("View Verified Sources"):
-                            for idx, src in enumerate(sources):
-                                st.caption(f"Source {idx+1}: {src}")
-                    
-                    st.session_state.messages.append({
-                        "role": "assistant", 
-                        "content": answer,
-                        "sources": sources 
-                    })
+                res = requests.post(f"{BACKEND_URL}/ask", json={"query": prompt})
+                if res.status_code == 200:
+                    data = res.json()
+                    ans, srcs = data.get("answer", ""), data.get("sources", [])
+                    st.markdown(ans)
+                    if srcs:
+                        with st.expander("🔍 Verified Sources"):
+                            for s in srcs: 
+                                st.caption(f"• {s}")
+                    st.session_state.messages.append({"role": "assistant", "content": ans, "sources": srcs})
                 else:
-                    st.error(f"Service Unavailable: {response.text}")
-            except Exception as e:
-                st.error("Network Error: Backend unreachable.")
+                    st.error("Service unavailable.")
+            except:
+                st.error("Network error.")
