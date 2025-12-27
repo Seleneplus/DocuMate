@@ -4,7 +4,7 @@ import requests
 # --- 1. CONFIGURATION LAYER (ZERO-HARDCODING) ---
 # Centralized settings for logic and multi-language text.
 SETTINGS = {
-    "backend_url": "http://127.0.0.1:8000",
+    "backend_url": "https://seleneplus-documate-backend.hf.space",
     "ui": {
         "btn_height": "42px",
         "btn_radius": "8px",

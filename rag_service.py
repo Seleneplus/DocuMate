@@ -1,7 +1,7 @@
 import os
 import shutil
 from dotenv import load_dotenv
-os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
+#os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 
 # Import LangChain components
 
