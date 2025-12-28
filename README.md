@@ -1,5 +1,7 @@
 # 🤖 DocuMate: Industrial-Grade RAG Document Intelligence
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_svg)](https://docu-mate-ai.streamlit.app)
+<a href="https://docu-mate-ai.streamlit.app">
+  <img src="https://static.streamlit.io/badges/streamlit_badge_svg" alt="Streamlit App">
+</a>
 
 
 DocuMate is a professional document analysis assistant powered by RAG (Retrieval-Augmented Generation) architecture. Adhering to the strict principle of "No context, no answer," it generates responses by extracting facts exclusively from user-uploaded PDFs combined with the DeepSeek-V3 LLM. If the required information is not found within the document, the system will honestly inform the user, effectively eliminating the common "hallucination" issues associated with large language models.
