@@ -1,8 +1,22 @@
 # 🤖 DocuMate: Industrial-Grade RAG Document Intelligence
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_svg)](https://docu-mate-ai.streamlit.app)
 
-DocuMate is a high-performance RAG (Retrieval-Augmented Generation) assistant designed to transform static PDFs into interactive, verifiable knowledge bases. It features a privacy-first hybrid AI architecture and a fully localized professional UI.
+
+DocuMate is a professional document analysis assistant powered by RAG (Retrieval-Augmented Generation) architecture. Adhering to the strict principle of "No context, no answer," it generates responses by extracting facts exclusively from user-uploaded PDFs combined with the DeepSeek-V3 LLM. If the required information is not found within the document, the system will honestly inform the user, effectively eliminating the common "hallucination" issues associated with large language models.
 
 ---
+
+## 🏗️ System Architecture
+
+```mermaid
+graph LR
+    A[User] --> B[Streamlit Cloud - Frontend UI]
+    B -- "REST API (JSON)" --> C[Hugging Face Space - FastAPI Backend]
+    C --> D[(ChromaDB - Vector Store)]
+    C --> E[DeepSeek V3 - LLM Engine]
+    
+    style B fill:#f9f,stroke:#333,stroke-width:2px
+    style C fill:#bbf,stroke:#333,stroke-width:2px
 
 ## 🏗️ Technical Stack
 
@@ -13,6 +27,8 @@ DocuMate is a high-performance RAG (Retrieval-Augmented Generation) assistant de
 * **Vector Database**: **ChromaDB** — Persistent storage for high-precision semantic retrieval.
 * **Orchestration**: **LangChain** (RecursiveCharacterTextSplitter, PyMuPDFLoader).
 * **Theming**: Configuration-driven via `.streamlit/config.toml` (Primary Color: `#4F46E5`).
+* **Containerization**: **Docker** (Multi-stage builds implemented to optimize image size and deployment efficiency).
+* **Deployment**: **Distributed Architecture** (Frontend hosted on **Streamlit Cloud**, Backend engine on **Hugging Face Spaces** via FastAPI).
 
 ---
 
@@ -41,7 +57,7 @@ Configured `HF_ENDPOINT` mirroring to ensure stable model downloads and 100% ser
 ## 🚀 Usage
 
 ### Option A: Online Demo (Recommended)
-[Click here to access the Live Demo](your-website-link)
+[Click here to access the Live Demo](https://docu-mate-ai.streamlit.app)
 
 ### Option B: Local Development
 If you wish to study the source code or run the application in a local environment, please follow these steps:
