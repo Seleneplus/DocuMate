@@ -1,7 +1,5 @@
 # 🤖 DocuMate: Industrial-Grade RAG Document Intelligence
-<a href="https://docu-mate-ai.streamlit.app">
-  <img src="https://static.streamlit.io/badges/streamlit_badge_svg" alt="Streamlit App">
-</a>
+
 
 
 DocuMate is a professional document analysis assistant powered by RAG (Retrieval-Augmented Generation) architecture. Adhering to the strict principle of "No context, no answer," it generates responses by extracting facts exclusively from user-uploaded PDFs combined with the DeepSeek-V3 LLM. If the required information is not found within the document, the system will honestly inform the user, effectively eliminating the common "hallucination" issues associated with large language models.
@@ -70,19 +68,31 @@ If you wish to study the source code or run the application in a local environme
     git clone [https://github.com/Seleneplus/DocuMate.git](https://github.com/Seleneplus/DocuMate.git)
     cd DocuMate
     ```
-2.  **Install Dependencies**:
+2.  **Set Up Virtual Environment**：
+    It is highly recommended to use a virtual environment to avoid dependency conflicts:
+    ```bash
+    # Create the virtual environment
+    python -m venv venv
+
+    # Activate it (Windows)
+    .\venv\Scripts\activate
+
+    # Activate it (Mac/Linux)
+    source venv/bin/activate
+    ```
+3.  **Install Dependencies**:
     Ensure you have Python installed, then run:
     ```bash
     pip install -r requirements.txt
     ```
-3.  **Configure Environment Variables**:
+4.  **Configure Environment Variables**:
     Create a `.env` file in the root directory and add your DeepSeek API credentials:
     ```env
     OPENAI_API_KEY=your_deepseek_api_key
     OPENAI_API_BASE=[https://api.deepseek.com/v1](https://api.deepseek.com/v1)
     LLM_MODEL=deepseek-chat
     ```
-4.  **Run the Application**:
+5.  **Run the Application**:
     ```bash
     streamlit run app.py
     ```
