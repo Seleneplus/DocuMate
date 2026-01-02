@@ -212,12 +212,17 @@ if prompt := st.chat_input(t["chat_input"]):
                 )
                 if res.status_code == 200:
                     data = res.json()
-                    ans, srcs = data.get("answer", ""), data.get("sources", [])
+                    ans = data.get("answer", "")
+                    srcs = data.get("sources", [])
+                    display_ans = ans.replace(r"\(", "$").replace(r"\)", "$")
+                    display_ans = display_ans.replace(r"\[", "$$").replace(r"\]", "$$")
+                    
                     st.markdown(ans)
                     if srcs:
                         with st.expander(t["sources_header"]):
                             for s in srcs: st.caption(f"• {s}")
-                    st.session_state.messages.append({"role": "assistant", "content": ans, "sources": srcs})
+                    st.session_state.messages.append({"role": "assistant", "content": display_ans, "sources": srcs})
+                    
                 else:
                     st.error(t["err_engine"])
             except:
