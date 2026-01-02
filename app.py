@@ -217,6 +217,16 @@ if prompt := st.chat_input(t["chat_input"]):
                     display_ans = ans.replace(r"\(", "$").replace(r"\)", "$")
                     display_ans = display_ans.replace(r"\[", "$$").replace(r"\]", "$$")
                     
+                    
+                    display_ans = display_ans.replace("( \\", "$ \\").replace(" )", "$")
+                    
+                    
+                    display_ans = display_ans.replace("(\\frac", "$\\frac")
+                    
+                    
+                    if "\\frac" in display_ans and " )" not in display_ans:
+                        display_ans = display_ans.replace(")", "$")
+                    
                     st.markdown(display_ans)
                     if srcs:
                         with st.expander(t["sources_header"]):
