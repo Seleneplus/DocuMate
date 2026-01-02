@@ -1,5 +1,3 @@
-
-
 # 🤖 DocuMate: Industrial-Grade RAG Document Intelligence
 
 
