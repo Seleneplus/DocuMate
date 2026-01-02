@@ -1,3 +1,12 @@
+---
+title: DocuMate-Backend
+emoji: 🚀
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+---
+
 # 🤖 DocuMate: Industrial-Grade RAG Document Intelligence
 
 
