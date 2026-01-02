@@ -1,5 +1,6 @@
 import os
 import shutil
+import time
 from dotenv import load_dotenv
 #os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 
@@ -47,11 +48,21 @@ class RAGService:
     def ingest_file(self, file_path: str):
         """Core Function A: Ingest and process PDF document"""
         try:
+            if hasattr(self, 'vector_store'):
+                self.vector_store = None
             # 🔥 Modification 1: Force clear old memory!
             # Delete the old database directory before uploading a new file
             if os.path.exists(PERSIST_DIRECTORY):
-                shutil.rmtree(PERSIST_DIRECTORY)
-                print(f"---------> Old memory cleared, preparing to load new file <---------")
+                
+                for i in range(3):
+                    try:
+                        shutil.rmtree(PERSIST_DIRECTORY)
+                        print(f"---------> Old index cleared successfully <---------")
+                        break
+                    except Exception as e:
+                        print(f"Waiting for file release... {e}")
+                        time.sleep(1) # Wait 1 second before retrying
+                
 
             # Load the PDF file
             loader = PyMuPDFLoader(file_path)
