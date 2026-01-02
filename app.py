@@ -217,7 +217,7 @@ if prompt := st.chat_input(t["chat_input"]):
                     display_ans = ans.replace(r"\(", "$").replace(r"\)", "$")
                     display_ans = display_ans.replace(r"\[", "$$").replace(r"\]", "$$")
                     
-                    st.markdown(ans)
+                    st.markdown(display_ans)
                     if srcs:
                         with st.expander(t["sources_header"]):
                             for s in srcs: st.caption(f"• {s}")
