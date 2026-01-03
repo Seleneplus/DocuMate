@@ -21,7 +21,13 @@ from langchain_community.document_loaders import PyMuPDFLoader
 load_dotenv()
 
 # Local storage path for the vector database
-PERSIST_DIRECTORY = "./chroma_db"
+
+if os.environ.get("SPACE_ID"):
+    
+    PERSIST_DIRECTORY = "/tmp/chroma_db"
+else:
+    
+    PERSIST_DIRECTORY = "./chroma_db"
 
 class RAGService:
     def __init__(self):
