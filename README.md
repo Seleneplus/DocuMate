@@ -1,10 +1,12 @@
 # 🤖 DocuMate: Industrial-Grade RAG Document Intelligence
 
 
-
 DocuMate is a professional document analysis assistant powered by RAG (Retrieval-Augmented Generation) architecture. Adhering to the strict principle of "No context, no answer," it generates responses by extracting facts exclusively from user-uploaded PDFs combined with the DeepSeek-V3 LLM. If the required information is not found within the document, the system will honestly inform the user, effectively eliminating the common "hallucination" issues associated with large language models.
 
 ---
+## 📺 testing video demo（3minutes）
+
+[![DocuMate Demo Video](https://img.youtube.com/vi/0_TJYAEkffw/maxresdefault.jpg)](https://youtu.be/0_TJYAEkffw)
 
 ## 🏗️ System Architecture
 
