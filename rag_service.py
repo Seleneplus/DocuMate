@@ -1,6 +1,7 @@
 import os
 import shutil
 import time
+import gc
 from dotenv import load_dotenv
 #os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 
@@ -58,11 +59,13 @@ class RAGService:
                 self.vector_store = None
             # 🔥 Modification 1: Force clear old memory!
             # Delete the old database directory before uploading a new file
+            gc.collect()
             if os.path.exists(PERSIST_DIRECTORY):
                 
                 for i in range(3):
                     try:
-                        shutil.rmtree(PERSIST_DIRECTORY)
+                        shutil.rmtree(PERSIST_DIRECTORY, ignore_errors=True)
+                        time.sleep(0.5)
                         print(f"---------> Old index cleared successfully <---------")
                         break
                     except Exception as e:
